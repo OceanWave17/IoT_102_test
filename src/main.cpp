@@ -7,7 +7,7 @@ This code connects an ESP32 to ThingsBoard using MQTT and sends temperature and 
 
 // DHT sensor configuration
 #define DHT_PIN 4      // Pin connected to the DHT sensor
-#define DHT_TYPE DHT22 // DHT sensor type
+#define DHT_TYPE DHT11 // DHT sensor type
 
 // WiFi credentials
 const char *ssid = "MBL - IOT";
@@ -75,59 +75,6 @@ void setup()
     dht.begin();
 }
 
-// void loop()
-// {
-//     if (WiFi.status() != WL_CONNECTED)
-//     {
-//         connectWifi();
-//     }
-
-//     if (!client.connected())
-//     {
-//         connectMqtt();
-//     }
-
-//     client.loop();
-
-//     unsigned long currentMillis = millis();
-//     if (currentMillis - previousMillis >= interval)
-//     {
-//         float temperature = dht.readTemperature();
-//         float humidity = dht.readHumidity();
-
-//         if (isnan(temperature) || isnan(humidity))
-//         {
-//             Serial.println("Failed to read from DHT sensor!");
-//             return;
-//         }
-
-//         Serial.print("Temperature: ");
-//         Serial.print(temperature);
-//         Serial.print(" °C, Humidity: ");
-//         Serial.print(humidity);
-//         Serial.println(" %");
-
-//         // Create JSON payload
-//         String payload = "{";
-//         payload += "\"temperature\":" + String(temperature) + ",";
-//         payload += "\"humidity\":" + String(humidity);
-//         payload += "}";
-
-//         // Publish data to ThingsBoard
-//         if (client.publish("v1/devices/me/telemetry", payload.c_str()))
-//         {
-//             Serial.println("Data sent successfully");
-//         }
-//         else
-//         {
-//             Serial.println("Failed to send data");
-//         }
-
-//         previousMillis = currentMillis;
-//     }
-// }
-// ...existing code...
-
 void loop()
 {
     if (WiFi.status() != WL_CONNECTED)
@@ -145,13 +92,18 @@ void loop()
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval)
     {
-        // Mock data for temperature and humidity
-        float temperature = random(200, 300) / 10.0; // Generates a random temperature between 20.0 and 30.0
-        float humidity = random(400, 600) / 10.0;    // Generates a random humidity between 40.0 and 60.0
+        float temperature = dht.readTemperature();
+        float humidity = dht.readHumidity();
 
-        Serial.print("Mock Temperature: ");
+        if (isnan(temperature) || isnan(humidity))
+        {
+            Serial.println("Failed to read from DHT sensor!");
+            return;
+        }
+
+        Serial.print("Temperature: ");
         Serial.print(temperature);
-        Serial.print(" °C, Mock Humidity: ");
+        Serial.print(" °C, Humidity: ");
         Serial.print(humidity);
         Serial.println(" %");
 
@@ -162,13 +114,13 @@ void loop()
         payload += "}";
 
         // Publish data to ThingsBoard
-        if (client.publish("SSN/Project/IoT102/test/attributes", payload.c_str()))
+        if (client.publish("SSN/Project/IoT102/test/telemetry", payload.c_str()))
         {
-            Serial.println("Mock data sent successfully");
+            Serial.println("Data sent successfully");
         }
         else
         {
-            Serial.println("Failed to send mock data");
+            Serial.println("Failed to send data");
         }
 
         previousMillis = currentMillis;
